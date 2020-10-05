@@ -1,5 +1,7 @@
 #pragma once
 #include<algorithm>
+#include <iterator>
+#include <ostream>
 #include<vector>
 #include<iostream>
 #include<queue>
@@ -31,24 +33,95 @@ private:
     std::vector<int> terminate_v;
     
     Automaton& normalize_vertexes();
-
+    std::vector<int> find_reachable() const; 
+    std::vector<std::vector<int> > build_table() const;
 public:
         
     Automaton(const std::vector<Edge>& _edges, 
             const std::vector<int>& _terminate);
+    Automaton(const Automaton& other); 
+    Automaton& operator=(const Automaton& other);
+
     int get_size() const {return VERTEX_CNT;} 
     std::vector<Edge> get_edges() const {return edges;}
     std::vector<int> get_terminates() const {return terminate_v;}
- 
-    std::vector<int> find_reachable() const; 
-    std::vector<std::vector<int> > build_table() const;
+    std::vector<int> addition_terminates() const;
+    Automaton& new_terminates(const std::vector<int>& _new);
+
     std::vector<std::vector<std::vector<int> > > 
         form_letter_to(bool reversed) const;
+    
+    Automaton to_full(int letter_cnt/*count of letter from 'a'*/) const;
     Automaton determinizate() const;
     Automaton minimalize() const;
+
+    friend std::ostream& operator<<(std::ostream &stream, const Automaton &A); 
+
 };
 
+Automaton& Automaton::operator=(const Automaton &other) {
+    edges = other.edges;
+    terminate_v = other.terminate_v;
+    VERTEX_CNT = other.VERTEX_CNT;
+    return *this;
+}
 
+Automaton::Automaton(const Automaton& other) {
+    edges = other.edges; 
+    terminate_v = other.terminate_v; 
+    VERTEX_CNT = other.VERTEX_CNT;
+}
+
+std::ostream& operator<<(std::ostream &stream, const Automaton &A) {
+    stream <<"edges: \n";
+    for (int i = 0; i < A.edges.size(); ++i) {
+        stream << A.edges[i].from << " " << A.edges[i].to << " " << A.edges[i].letter << '\n';
+    }
+    stream << "terminate vertexes:\n ";
+    for (int i = 0; i < A.terminate_v.size(); ++i) {
+        stream << A.terminate_v[i] << " ";
+    } 
+    stream << '\n';
+    return stream;
+}
+
+std::vector<int> Automaton::addition_terminates() const {
+    std::vector<int> used(VERTEX_CNT, 0), answer;
+    for (int i = 0; i < terminate_v.size(); ++i) {
+        used[terminate_v[i]] = 1;
+    }
+    for (int i = 0; i < VERTEX_CNT; ++i) {
+        if (!used[i]) answer.push_back(i);
+    }
+    return answer;
+}
+
+Automaton& Automaton::new_terminates(const std::vector<int>& _new) {
+    terminate_v = _new;
+    return *this;
+}
+
+Automaton Automaton::to_full(int letter_cnt) const {
+    auto gr = this->form_letter_to(false);
+    int flag = 0;
+    auto new_edges = edges;
+
+    for (int v = 0; v < gr.size(); ++v) {
+        for (int c = 0; c < letter_cnt; ++c) {
+            if (gr[v][c].size() == 0) {
+                flag = 1;    
+                new_edges.push_back(Edge(v, VERTEX_CNT, (char)(c + 'a')));
+            }
+        }
+    }
+    if (flag) {
+        for (int c = 0; c < letter_cnt; ++c) {
+            new_edges.push_back(Edge(VERTEX_CNT, VERTEX_CNT, (char)(c + 'a')));
+        }
+    }
+    return Automaton(new_edges, this->terminate_v);
+
+}
 
 std::vector<std::vector<int> > Automaton::build_table() const {
     auto gr_r = this->form_letter_to(true);
@@ -163,7 +236,7 @@ Automaton Automaton::minimalize() const {
 
 std::vector<std::vector<std::vector<int> > > 
 Automaton::form_letter_to(bool reversed = false) const {
-    std::vector<std::vector<std::vector<int> > > gr(edges.size(), 
+    std::vector<std::vector<std::vector<int> > > gr(VERTEX_CNT, 
         std::vector<std::vector<int> > ('z' - 'a' + 1, std::vector<int>(0)));
     for (int i = 0; i < edges.size(); ++i) {
         if (!reversed) 
