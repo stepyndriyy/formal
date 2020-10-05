@@ -1,7 +1,7 @@
 #pragma once
 #include<algorithm>
-#include <iterator>
-#include <ostream>
+#include<iterator>
+#include<ostream>
 #include<vector>
 #include<iostream>
 #include<queue>
@@ -45,6 +45,7 @@ public:
     int get_size() const {return VERTEX_CNT;} 
     std::vector<Edge> get_edges() const {return edges;}
     std::vector<int> get_terminates() const {return terminate_v;}
+    
     std::vector<int> addition_terminates() const;
     Automaton& new_terminates(const std::vector<int>& _new);
 
