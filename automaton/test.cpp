@@ -16,30 +16,30 @@ protected:
 
 TEST_F(Tests, TEST_DETERMIN) {
     Automaton x = read_automaton("tests/test_determ1.txt");
-    AutomatonStates ans, inp;
-    read_answer("tests/test_determ1_ans.txt", ans);
+    AutomatonStates expected, actual;
+    read_answer("tests/test_determ1_ans.txt", expected);
     x = x.determinizate(); 
-    get_real_values(x, inp);
+    get_real_values(x, actual);
 
-    ASSERT_EQ(inp.vertex_cnt, ans.vertex_cnt);
-    ASSERT_EQ(inp.term_cnt, ans.term_cnt);
-    ASSERT_EQ(inp.a_cnt, ans.a_cnt);
-    ASSERT_EQ(inp.b_cnt, ans.b_cnt);
+    ASSERT_EQ(actual.vertex_cnt, expected.vertex_cnt);
+    ASSERT_EQ(actual.term_cnt, expected.term_cnt);
+    ASSERT_EQ(actual.a_cnt, expected.a_cnt);
+    ASSERT_EQ(actual.b_cnt, expected.b_cnt);
 }
 
 TEST_F(Tests, TEST_MINIMALIZE) {
     Automaton x = read_automaton("tests/test_min1.txt");
-    AutomatonStates ans, inp;
+    AutomatonStates expected, actual;
 
-    read_answer("tests/test_min1_ans.txt", ans);
+    read_answer("tests/test_min1_ans.txt", expected);
     x = x.minimalize();
     
-    get_real_values(x, inp);
+    get_real_values(x, actual);
     
-    ASSERT_EQ(inp.vertex_cnt, ans.vertex_cnt);
-    ASSERT_EQ(inp.term_cnt, ans.term_cnt);
-    ASSERT_EQ(inp.a_cnt, ans.a_cnt);
-    ASSERT_EQ(inp.b_cnt, ans.b_cnt);
+    ASSERT_EQ(actual.vertex_cnt, expected.vertex_cnt);
+    ASSERT_EQ(actual.term_cnt, expected.term_cnt);
+    ASSERT_EQ(actual.a_cnt, expected.a_cnt);
+    ASSERT_EQ(actual.b_cnt, expected.b_cnt);
 }
 
 int main() {

@@ -9,12 +9,14 @@
 #include<utility>
 #include<map>
 
+static const int ALPHABET_SIZE = 'z' - 'a' + 1;
+
 static char NumberToLetter(int num) {
     return static_cast<char>(num + 'a');
 }
 
-static int LetterToNumber(char c) {
-    return static_cast<int>(c - 'a');
+static int LetterToNumber(char letter_number) {
+    return static_cast<int>(letter_number - 'a');
 }
 
 struct Edge {
@@ -36,7 +38,6 @@ struct Edge {
 
 class Automaton {
 private:
-    const int ALP_SZ = 'z' - 'a' + 1;
     int VERTEX_CNT = 0;
     std::vector<Edge> edges;
     std::vector<int> terminate_v;
@@ -110,21 +111,21 @@ Automaton& Automaton::new_terminates(const std::vector<int>& _new) {
 }
 
 Automaton Automaton::to_full(int letter_cnt) const {
-    auto gr = this->form_letter_to(false);
+    auto graph = this->form_letter_to(false);
     int flag = 0;
     auto new_edges = edges;
 
-    for (int v = 0; v < gr.size(); ++v) {
-        for (int c = 0; c < letter_cnt; ++c) {
-            if (gr[v][c].size() == 0) {
+    for (int v = 0; v < graph.size(); ++v) {
+        for (int letter_number = 0; letter_number < letter_cnt; ++letter_number) {
+            if (graph[v][letter_number].size() == 0) {
                 flag = 1;    
-                new_edges.push_back(Edge(v, VERTEX_CNT, NumberToLetter(c)));
+                new_edges.push_back(Edge(v, VERTEX_CNT, NumberToLetter(letter_number)));
             }
         }
     }
     if (flag) {
-        for (int c = 0; c < letter_cnt; ++c) {
-            new_edges.push_back(Edge(VERTEX_CNT, VERTEX_CNT, NumberToLetter(c)));
+        for (int letter_number = 0; letter_number < letter_cnt; ++letter_number) {
+            new_edges.push_back(Edge(VERTEX_CNT, VERTEX_CNT, NumberToLetter(letter_number)));
         }
     }
     return Automaton(new_edges, this->terminate_v);
@@ -153,11 +154,11 @@ std::vector<std::vector<int> > Automaton::build_table_not_equal_states() const {
         int u = next_edges.front().from;
         int v = next_edges.front().to;
         next_edges.pop();
-        for (int c = 0; c < ALP_SZ; ++c) {
-            for (int i = 0; i < gr_r[v][c].size(); ++i) {
-                for (int j = 0; j < gr_r[u][c].size(); ++j) {
-                    int next_state_u = gr_r[u][c][j];
-                    int next_state_v = gr_r[v][c][i];
+        for (int letter_number = 0; letter_number < ALPHABET_SIZE; ++letter_number) {
+            for (int i = 0; i < gr_r[v][letter_number].size(); ++i) {
+                for (int j = 0; j < gr_r[u][letter_number].size(); ++j) {
+                    int next_state_u = gr_r[u][letter_number][j];
+                    int next_state_v = gr_r[v][letter_number][i];
                     if (!not_equal_state[next_state_u][next_state_v]) {
                         not_equal_state[next_state_u][next_state_v] = 
                             not_equal_state[next_state_v][next_state_u] = 1;
@@ -171,7 +172,7 @@ std::vector<std::vector<int> > Automaton::build_table_not_equal_states() const {
 } 
 
 std::vector<int> Automaton::find_reachable() const {
-    auto gr = this->form_letter_to(false);
+    auto graph = this->form_letter_to(false);
     std::queue<int> next_vertex;
     std::vector<int> used(VERTEX_CNT, 0);
     next_vertex.push(0);
@@ -179,9 +180,9 @@ std::vector<int> Automaton::find_reachable() const {
     while (!next_vertex.empty()) {
         int from = next_vertex.front();
         next_vertex.pop();
-        for (int c = 0; c < ALP_SZ; ++c) {
-            for (int i = 0; i < gr[from][c].size(); ++i) {
-                int to = gr[from][c][i];
+        for (int letter_number = 0; letter_number < ALPHABET_SIZE; ++letter_number) {
+            for (int i = 0; i < graph[from][letter_number].size(); ++i) {
+                int to = graph[from][letter_number][i];
                 if (used[to]) continue;
                 used[to] = 1;
                 next_vertex.push(to);
@@ -244,18 +245,18 @@ Automaton Automaton::minimalize() const {
 
 std::vector<std::vector<std::vector<int> > > 
 Automaton::form_letter_to(bool reversed = false) const {
-    std::vector<std::vector<std::vector<int> > > gr(VERTEX_CNT, 
-        std::vector<std::vector<int> > (ALP_SZ, std::vector<int>(0)));
+    std::vector<std::vector<std::vector<int> > > graph(VERTEX_CNT, 
+        std::vector<std::vector<int> > (ALPHABET_SIZE, std::vector<int>(0)));
     for (int i = 0; i < edges.size(); ++i) {
         if (!reversed) { 
-            gr[edges[i].from][LetterToNumber(edges[i].letter)].
+            graph[edges[i].from][LetterToNumber(edges[i].letter)].
                 push_back(edges[i].to);
         } else {
-            gr[edges[i].to][LetterToNumber(edges[i].letter)].
+            graph[edges[i].to][LetterToNumber(edges[i].letter)].
                 push_back(edges[i].from);
         }
     }
-    return gr;
+    return graph;
 }
 
 Automaton& Automaton::normalize_vertexes() {
@@ -293,7 +294,7 @@ Automaton::Automaton(const std::vector<Edge>& _edges, const std::vector<int>& _t
 //using bitset mask to calculate next vetrex
 Automaton Automaton::determinizate() const {
     const int MAX_BIT_IN_INT = 32;
-    auto gr = this->form_letter_to();
+    auto graph = this->form_letter_to();
     std::set<int> used;
     std::queue<int> process_next;
     std::vector<Edge> answer; 
@@ -305,20 +306,21 @@ Automaton Automaton::determinizate() const {
         int current_vertex = process_next.front();
         process_next.pop();
         
-        for (int c = 0; c < ALP_SZ; ++c) {
+        for (int letter_number = 0; letter_number < ALPHABET_SIZE; ++letter_number) {
             int next_vertex = 0;
-            for (int cur = 0; cur < MAX_BIT_IN_INT; cur++) {
-                int bit_responds_cur = (1<<cur);
-                if ((bit_responds_cur & current_vertex) == 0) continue;
-                
-                for (int j = 0; j < gr[cur][c].size(); ++j) {
-                    int bit_responds_j = (1<<gr[cur][c][j]);
+            for (int vertex = 0; vertex < MAX_BIT_IN_INT; vertex++) {
+                int bit_responds = (1<<vertex);
+                if ((bit_responds & current_vertex) == 0) {
+                    continue;
+                }
+                for (int j = 0; j < graph[vertex][letter_number].size(); ++j) {
+                    int bit_responds_j = (1<<graph[vertex][letter_number][j]);
                     next_vertex |= bit_responds_j;
                 }
                     
             }
             if (next_vertex > 0) {
-                answer.push_back(Edge(current_vertex, next_vertex, NumberToLetter(c)));
+                answer.push_back(Edge(current_vertex, next_vertex, NumberToLetter(letter_number)));
                 if (used.find(next_vertex) == used.end()) {
                     used.insert(next_vertex);
                     process_next.push(next_vertex);
