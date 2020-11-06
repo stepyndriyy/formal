@@ -1,3 +1,3 @@
 # Формальные языки
 
-## Automaton (README-automaton.md)
+## [Automaton](README-automaton.md)

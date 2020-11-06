@@ -8,7 +8,6 @@ int main() {
 
     //input
     int vertex_cnt, edges_cnt;
-    int start;
     cin >> vertex_cnt >> edges_cnt;
 
     vector<Edge> edges(edges_cnt); 
