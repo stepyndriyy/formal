@@ -1,3 +1,4 @@
 # Формальные языки
 
-## [Automaton](README-automaton.md)
+## [PRACTICE1](practice1_guide.md)
+

@@ -1,4 +1,5 @@
 /automaton/build
 /automaton/bin
 /automaton/main
+/automaton/report
 *.swp
